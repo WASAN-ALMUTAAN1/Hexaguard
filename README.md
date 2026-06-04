@@ -64,7 +64,7 @@ MOCK_MODE: false
 Then update:
 
 ```js
-API_BASE_URL: "https://your-backend-domain.com/api"
+API_BASE_URL: "https://backend-domain.com/api"
 ```
 
 ## Connected modules
