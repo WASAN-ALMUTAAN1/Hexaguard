@@ -10,13 +10,11 @@ It combines a modern Next.js frontend, FastAPI backend, SQLAlchemy database mode
 
 <br />
 
-<img src="docs/screenshots/demo.gif" alt="HexaGuard Demo Preview" width="900">
+<img src="assets/hexaguard_demo_logical_clear_1080p.gif" alt="HexaGuard Demo Preview" width="900">
 
 <br />
 
-> **Demo GIF placeholder:** add the actual demo file at `docs/screenshots/demo.gif`.
 
-<br />
 
 ![Next.js](https://img.shields.io/badge/Frontend-Next.js-black?style=for-the-badge\&logo=next.js)
 ![React](https://img.shields.io/badge/UI-React-20232A?style=for-the-badge\&logo=react)
