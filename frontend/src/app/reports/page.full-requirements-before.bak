@@ -1,0 +1,1431 @@
+"use client";
+
+import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
+
+const API_BASE_URL = (
+  process.env.NEXT_PUBLIC_HEXAGUARD_API_URL ||
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  "http://127.0.0.1:8000/api/v1"
+).replace(/\/$/, "");
+
+type ReportTabKey = "results" | "risk" | "comparison" | "recommendations";
+
+type CampaignListResponse = {
+  total?: number;
+  limit?: number;
+  offset?: number;
+  items?: CampaignSummary[];
+};
+
+type CampaignSummary = {
+  id?: number;
+  campaign_id: string;
+  name?: string;
+  description?: string | null;
+  status?: string;
+  test_source_type?: string | null;
+  dataset_id?: string | null;
+  dataset_name?: string | null;
+  dataset_row_count?: number;
+  selected_models?: string[];
+  selected_scenario_ids?: string[];
+  selected_categories?: string[];
+  selected_mutations?: string[];
+  max_tests?: number;
+  total_tests?: number;
+  completed_tests?: number;
+  failed_tests?: number;
+  critical_findings?: number;
+  average_risk_score?: number;
+  created_at?: string;
+  started_at?: string | null;
+  completed_at?: string | null;
+};
+
+type CampaignStatus = CampaignSummary & {
+  progress_percent?: number;
+};
+
+type CampaignResultsResponse = {
+  campaign_id?: string;
+  total?: number;
+  items?: CampaignResultItem[];
+};
+
+type CampaignResultItem = Record<string, unknown>;
+
+type ModelSummary = {
+  modelName: string;
+  provider: string;
+  totalTests: number;
+  passedTests: number;
+  failedTests: number;
+  attackSuccessCount: number;
+  criticalFindings: number;
+  averageRiskScore: number;
+  highestRiskScore: number;
+  severity: string;
+  finalStatus: string;
+  representativeFinding: string;
+};
+
+type FindingGroup = {
+  category: string;
+  severity: string;
+  highestRiskScore: number;
+  affectedModels: string[];
+  affectedTests: number;
+  attackSuccesses: number;
+  criticalFindings: number;
+  evidence: string;
+};
+
+type Recommendation = {
+  title: string;
+  priority: "Critical" | "High" | "Medium" | "Low";
+  category: string;
+  affectedModels: string[];
+  reason: string;
+  actions: string[];
+  validation: string;
+};
+
+const REPORT_TABS: Array<{
+  key: ReportTabKey;
+  label: string;
+  description: string;
+}> = [
+  {
+    key: "results",
+    label: "Test Results",
+    description: "Final campaign status, tested inputs, and stored evidence.",
+  },
+  {
+    key: "risk",
+    label: "Risk Scores",
+    description: "Risk score, severity, attack success, and critical findings.",
+  },
+  {
+    key: "comparison",
+    label: "Model Comparison",
+    description: "Model-by-model campaign summary from the latest backend run.",
+  },
+  {
+    key: "recommendations",
+    label: "Recommendations",
+    description: "Blue Team actions generated from the latest campaign findings.",
+  },
+];
+
+export default function ReportsPage() {
+  const [activeTab, setActiveTab] = useState<ReportTabKey>("results");
+  const [latestCampaign, setLatestCampaign] = useState<CampaignSummary | null>(null);
+  const [campaignStatus, setCampaignStatus] = useState<CampaignStatus | null>(null);
+  const [campaignResults, setCampaignResults] = useState<CampaignResultsResponse | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [message, setMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const loadLatestCampaignReport = useCallback(async () => {
+    setIsLoading(true);
+    setErrorMessage("");
+    setMessage("");
+
+    const requestedCampaignId =
+      typeof window !== "undefined"
+        ? new URLSearchParams(window.location.search).get("campaignId")?.trim() || ""
+        : "";
+
+    try {
+      let campaign: CampaignSummary | null = null;
+
+      if (requestedCampaignId) {
+        const campaignResponse = await fetch(
+          `${API_BASE_URL}/campaigns/${encodeURIComponent(requestedCampaignId)}`,
+          {
+            headers: { Accept: "application/json" },
+            cache: "no-store",
+          }
+        );
+
+        campaign = await parseApiResponse<CampaignSummary>(campaignResponse);
+
+        if (!campaign?.campaign_id) {
+          campaign = {
+            campaign_id: requestedCampaignId,
+            name: "Selected Campaign",
+          };
+        }
+      } else {
+        const listResponse = await fetch(`${API_BASE_URL}/campaigns?limit=25&offset=0`, {
+          headers: { Accept: "application/json" },
+          cache: "no-store",
+        });
+
+        const listData = await parseApiResponse<CampaignListResponse>(listResponse);
+        const campaigns = Array.isArray(listData.items) ? listData.items : [];
+
+        campaign =
+          campaigns.find((item) => String(item.status || "").toLowerCase() === "completed") ||
+          campaigns[0] ||
+          null;
+      }
+
+      if (!campaign?.campaign_id) {
+        setLatestCampaign(null);
+        setCampaignStatus(null);
+        setCampaignResults(null);
+        setMessage("No backend campaign results are available yet.");
+        return;
+      }
+
+      const campaignId = campaign.campaign_id;
+
+      const [statusResponse, resultsResponse] = await Promise.all([
+        fetch(`${API_BASE_URL}/campaigns/${encodeURIComponent(campaignId)}/status`, {
+          headers: { Accept: "application/json" },
+          cache: "no-store",
+        }),
+        fetch(`${API_BASE_URL}/campaigns/${encodeURIComponent(campaignId)}/results`, {
+          headers: { Accept: "application/json" },
+          cache: "no-store",
+        }),
+      ]);
+
+      const statusData = await parseApiResponse<CampaignStatus>(statusResponse);
+      const resultsData = await parseApiResponse<CampaignResultsResponse>(resultsResponse);
+
+      setLatestCampaign({
+        ...campaign,
+        ...statusData,
+        campaign_id: campaignId,
+        selected_models: campaign.selected_models || statusData.selected_models || [],
+        selected_categories: campaign.selected_categories || statusData.selected_categories || [],
+      });
+      setCampaignStatus(statusData);
+      setCampaignResults(resultsData);
+
+      setMessage(
+        requestedCampaignId
+          ? `Loaded selected campaign: ${campaignId}`
+          : `Loaded latest completed campaign: ${campaignId}`
+      );
+    } catch (error) {
+      setLatestCampaign(null);
+      setCampaignStatus(null);
+      setCampaignResults(null);
+      setErrorMessage(
+        requestedCampaignId
+          ? `Unable to load selected campaign ${requestedCampaignId}.`
+          : error instanceof Error
+            ? error.message
+            : "Unable to load latest campaign report."
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadLatestCampaignReport();
+  }, [loadLatestCampaignReport]);
+
+  const resultItems = campaignResults?.items || [];
+
+  const modelSummaries = useMemo(
+    () => buildModelSummaries(resultItems, campaignStatus || latestCampaign),
+    [resultItems, campaignStatus, latestCampaign]
+  );
+
+  const findingGroups = useMemo(
+    () => buildFindingGroups(resultItems, campaignStatus || latestCampaign),
+    [resultItems, campaignStatus, latestCampaign]
+  );
+
+  const riskSummary = useMemo(
+    () => buildRiskSummary(campaignStatus || latestCampaign, modelSummaries, findingGroups),
+    [campaignStatus, latestCampaign, modelSummaries, findingGroups]
+  );
+
+  const recommendations = useMemo(
+    () => buildRecommendations(riskSummary, modelSummaries, findingGroups),
+    [riskSummary, modelSummaries, findingGroups]
+  );
+
+  const exportPayload = useMemo(
+    () => ({
+      source: "HexaGuard Reports",
+      loaded_at: new Date().toISOString(),
+      latest_campaign: latestCampaign,
+      status: campaignStatus,
+      results: campaignResults,
+      model_summaries: modelSummaries,
+      finding_groups: findingGroups,
+      recommendations,
+    }),
+    [latestCampaign, campaignStatus, campaignResults, modelSummaries, findingGroups, recommendations]
+  );
+
+  function copyJson() {
+    navigator.clipboard.writeText(JSON.stringify(exportPayload, null, 2));
+    setMessage("Latest campaign report copied as JSON.");
+  }
+
+  function downloadJson() {
+    const blob = new Blob([JSON.stringify(exportPayload, null, 2)], {
+      type: "application/json",
+    });
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    const campaignId = latestCampaign?.campaign_id || "latest";
+
+    link.href = url;
+    link.download = `hexaguard-campaign-report-${campaignId}.json`;
+    link.click();
+
+    URL.revokeObjectURL(url);
+    setMessage("Latest campaign report downloaded as JSON.");
+  }
+
+  return (
+    <main className="hxg-background min-h-screen p-8 text-white">
+      <div className="mx-auto max-w-7xl space-y-6">
+        <section className="rounded-[22px] border border-[#353637] bg-[#27292a] p-6 shadow-[0_24px_70px_rgba(0,0,0,0.32)]">
+          <div className="flex flex-wrap items-start justify-between gap-5">
+            <div>
+              <p className="text-sm uppercase tracking-[0.28em] text-[#4ad7ff]">
+                HEXAGUARD Reports
+              </p>
+
+              <h1 className="mt-2 text-3xl font-bold">
+                Final Analysis Center
+              </h1>
+
+              <p className="mt-3 max-w-3xl text-sm leading-6 text-[#d4d4d4]">
+                Reports reads the latest backend campaign, summarizes final results,
+                compares tested models, and generates Blue Team recommendations.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={loadLatestCampaignReport}
+                className="rounded-full border border-white/[0.12] bg-[#1f2122] px-4 py-2 text-sm font-semibold text-white transition hover:border-[#4ad7ff]/50 hover:text-[#4ad7ff]"
+              >
+                Refresh Latest Campaign
+              </button>
+
+              <button
+                type="button"
+                onClick={copyJson}
+                disabled={!latestCampaign}
+                className="rounded-full border border-white/[0.12] bg-[#1f2122] px-4 py-2 text-sm font-semibold text-white transition hover:border-[#4ad7ff]/50 hover:text-[#4ad7ff] disabled:cursor-not-allowed disabled:opacity-45"
+              >
+                Copy JSON
+              </button>
+
+              <button
+                type="button"
+                onClick={downloadJson}
+                disabled={!latestCampaign}
+                className="rounded-full bg-[#ff3434] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#ff4b4b] disabled:cursor-not-allowed disabled:opacity-45"
+              >
+                Download JSON
+              </button>
+            </div>
+          </div>
+
+          {message && (
+            <p className="mt-4 rounded-[14px] border border-[#4ad7ff]/25 bg-[#4ad7ff]/10 px-4 py-3 text-sm text-[#4ad7ff]">
+              {message}
+            </p>
+          )}
+
+          {errorMessage && (
+            <p className="mt-4 rounded-[14px] border border-[#ff3434]/35 bg-[#ff3434]/10 px-4 py-3 text-sm text-[#ff8c8c]">
+              {errorMessage}
+            </p>
+          )}
+        </section>
+
+        <section className="grid gap-4 md:grid-cols-4">
+          <SummaryCard
+            label="Latest Campaign"
+            value={latestCampaign?.campaign_id || "No campaign"}
+            tone="cyan"
+          />
+          <SummaryCard
+            label="Status"
+            value={campaignStatus?.status || latestCampaign?.status || "N/A"}
+            tone={statusTone(campaignStatus?.status || latestCampaign?.status)}
+          />
+          <SummaryCard
+            label="Models"
+            value={String(modelSummaries.length)}
+            tone="neutral"
+          />
+          <SummaryCard
+            label="Recommendations"
+            value={String(recommendations.length)}
+            tone={recommendations.some((item) => item.priority === "Critical") ? "critical" : "low"}
+          />
+        </section>
+
+        <section className="rounded-[22px] border border-[#353637] bg-[#27292a] p-4">
+          <div className="grid gap-3 md:grid-cols-4">
+            {REPORT_TABS.map((tab) => {
+              const isActive = activeTab === tab.key;
+
+              return (
+                <button
+                  key={tab.key}
+                  type="button"
+                  onClick={() => setActiveTab(tab.key)}
+                  className={`rounded-[18px] border p-4 text-left transition ${
+                    isActive
+                      ? "border-[#ff3434]/55 bg-[#ff3434]/12"
+                      : "border-white/[0.08] bg-[#1f2122] hover:border-[#4ad7ff]/35"
+                  }`}
+                >
+                  <p className={`text-sm font-bold ${isActive ? "text-white" : "text-[#d4d4d4]"}`}>
+                    {tab.label}
+                  </p>
+                  <p className="mt-2 text-xs leading-5 text-[#8f8f8f]">
+                    {tab.description}
+                  </p>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        {activeTab === "results" && (
+          <Panel
+            eyebrow="Test Results"
+            title="Latest Campaign Results"
+            description="Answers: What are the final results? What evidence can I export?"
+          >
+            {isLoading ? (
+              <LoadingState />
+            ) : !latestCampaign ? (
+              <EmptyState />
+            ) : (
+              <div className="grid gap-4 lg:grid-cols-[0.75fr_1.25fr]">
+                <div className="space-y-4">
+                  <DetailCard label="Campaign ID" value={latestCampaign.campaign_id} />
+                  <DetailCard label="Name" value={latestCampaign.name || "Automated Red Team Campaign"} />
+                  <DetailCard label="Source" value={sourceLabel(latestCampaign.test_source_type)} />
+                  <DetailCard label="Categories" value={(latestCampaign.selected_categories || []).join(", ") || "N/A"} />
+                  <DetailCard label="Models" value={(latestCampaign.selected_models || []).join(", ") || "N/A"} />
+                  <DetailCard
+                    label="Tests"
+                    value={`${numberValue(campaignStatus?.completed_tests || latestCampaign.completed_tests)}/${numberValue(campaignStatus?.total_tests || latestCampaign.total_tests)}`}
+                  />
+                </div>
+
+                <div className="rounded-[18px] border border-white/[0.08] bg-[#151718] p-5">
+                  <h3 className="text-lg font-bold text-white">Stored Result Items</h3>
+                  <p className="mt-1 text-sm text-[#8f8f8f]">
+                    {resultItems.length} backend result records found.
+                  </p>
+
+                  <div className="mt-4 max-h-[440px] space-y-3 overflow-auto pr-1">
+                    {resultItems.length === 0 ? (
+                      <p className="rounded-[14px] border border-white/[0.08] bg-[#1f2122] p-4 text-sm text-[#a9a9a9]">
+                        No campaign result rows were returned for this campaign.
+                      </p>
+                    ) : (
+                      resultItems.slice(0, 20).map((item, index) => (
+                        <ResultItemCard key={index} item={item} index={index} />
+                      ))
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+          </Panel>
+        )}
+
+        {activeTab === "risk" && (
+          <Panel
+            eyebrow="Risk Scores"
+            title="Risk Score Summary"
+            description="Answers: What risks were found and how severe are they?"
+          >
+            {isLoading ? (
+              <LoadingState />
+            ) : !latestCampaign ? (
+              <EmptyState />
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                <MetricBox
+                  label="Average Risk"
+                  value={String(Math.round(riskSummary.averageRiskScore))}
+                  tone={riskTone(riskSummary.averageRiskScore)}
+                />
+                <MetricBox
+                  label="Highest Risk"
+                  value={String(Math.round(riskSummary.highestRiskScore))}
+                  tone={riskTone(riskSummary.highestRiskScore)}
+                />
+                <MetricBox
+                  label="Attack Successes"
+                  value={String(riskSummary.attackSuccessCount)}
+                  tone={riskSummary.attackSuccessCount > 0 ? "critical" : "low"}
+                />
+                <MetricBox
+                  label="Critical Findings"
+                  value={String(riskSummary.criticalFindings)}
+                  tone={riskSummary.criticalFindings > 0 ? "critical" : "low"}
+                />
+              </div>
+            )}
+          </Panel>
+        )}
+
+        {activeTab === "comparison" && (
+          <Panel
+            eyebrow="Model Comparison"
+            title="Model-by-Model Summary"
+            description="Answers: Which model performed best and which model had the highest risk?"
+          >
+            {isLoading ? (
+              <LoadingState />
+            ) : !latestCampaign ? (
+              <EmptyState />
+            ) : modelSummaries.length === 0 ? (
+              <EmptyState
+                title="No model-level result rows found"
+                message="The latest campaign loaded, but no model-level result items were returned yet."
+              />
+            ) : (
+              <div className="space-y-5">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <HighlightCard
+                    label="Best Performing Model"
+                    value={riskSummary.bestModel}
+                    description="Lowest average risk score in the latest campaign."
+                    tone="low"
+                  />
+                  <HighlightCard
+                    label="Highest Risk Model"
+                    value={riskSummary.highestRiskModel}
+                    description="Highest average risk score in the latest campaign."
+                    tone={riskTone(riskSummary.highestRiskScore)}
+                  />
+                </div>
+
+                <div className="grid gap-4 lg:grid-cols-2">
+                  {modelSummaries.map((model) => (
+                    <ModelSummaryCard key={model.modelName} model={model} />
+                  ))}
+                </div>
+              </div>
+            )}
+          </Panel>
+        )}
+
+        {activeTab === "recommendations" && (
+          <Panel
+            eyebrow="Recommendations"
+            title="Blue Team Recommendations"
+            description="Answers: What recommendations should we follow?"
+          >
+            {isLoading ? (
+              <LoadingState />
+            ) : !latestCampaign ? (
+              <EmptyState />
+            ) : (
+              <div className="space-y-6">
+                <div className="grid gap-4 lg:grid-cols-[0.85fr_1.15fr]">
+                  <div className="rounded-[18px] border border-white/[0.08] bg-[#1f2122] p-5">
+                    <p className="text-xs uppercase tracking-[0.18em] text-[#727272]">
+                      Recommendation Summary
+                    </p>
+                    <h3 className="mt-2 text-xl font-bold text-white">
+                      {recommendations.length} actions generated
+                    </h3>
+                    <p className="mt-3 text-sm leading-6 text-[#a9a9a9]">
+                      Recommendations are generated from the latest campaign result
+                      categories, affected models, severity, risk scores, and attack
+                      success indicators.
+                    </p>
+
+                    <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                      <MiniMetric label="Risk Groups" value={String(findingGroups.length)} />
+                      <MiniMetric label="Models" value={String(modelSummaries.length)} />
+                      <MiniMetric label="Critical" value={String(recommendations.filter((item) => item.priority === "Critical").length)} />
+                      <MiniMetric label="High" value={String(recommendations.filter((item) => item.priority === "High").length)} />
+                    </div>
+                  </div>
+
+                  <div className="rounded-[18px] border border-white/[0.08] bg-[#1f2122] p-5">
+                    <p className="text-xs uppercase tracking-[0.18em] text-[#727272]">
+                      Risk Groups
+                    </p>
+                    <h3 className="mt-2 text-xl font-bold text-white">
+                      Findings grouped by category
+                    </h3>
+
+                    <div className="mt-4 space-y-3">
+                      {findingGroups.length === 0 ? (
+                        <p className="rounded-[14px] border border-white/[0.08] bg-[#27292a] p-4 text-sm text-[#a9a9a9]">
+                          No grouped findings were detected. General hardening
+                          recommendations are still provided below.
+                        </p>
+                      ) : (
+                        findingGroups.map((group) => (
+                          <FindingGroupCard key={group.category} group={group} />
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  {recommendations.map((item, index) => (
+                    <RecommendationCard key={`${item.title}-${index}`} item={item} />
+                  ))}
+                </div>
+
+                <div className="flex flex-wrap gap-3">
+                  <button
+                    type="button"
+                    onClick={copyJson}
+                    className="rounded-full border border-[#4ad7ff]/35 bg-[#4ad7ff]/10 px-4 py-2 text-sm font-semibold text-[#4ad7ff] transition hover:bg-[#4ad7ff]/15"
+                  >
+                    Copy export-ready recommendations
+                  </button>
+
+                  <a
+                    href="/blue-team"
+                    className="rounded-full border border-white/[0.12] bg-[#1f2122] px-4 py-2 text-sm font-semibold text-white transition hover:border-[#30d158]/45 hover:text-[#30d158]"
+                  >
+                    Open legacy Blue Team page
+                  </a>
+                </div>
+              </div>
+            )}
+          </Panel>
+        )}
+      </div>
+    </main>
+  );
+}
+
+async function parseApiResponse<T>(response: Response): Promise<T> {
+  const contentType = response.headers.get("content-type") || "";
+  const isJson = contentType.includes("application/json");
+  const payload = isJson ? await response.json() : await response.text();
+
+  if (!response.ok) {
+    const detail =
+      typeof payload === "object" && payload !== null && "detail" in payload
+        ? String((payload as { detail: unknown }).detail)
+        : `Request failed with status ${response.status}`;
+
+    throw new Error(detail);
+  }
+
+  return payload as T;
+}
+
+function buildModelSummaries(
+  items: CampaignResultItem[],
+  campaign?: CampaignSummary | null
+): ModelSummary[] {
+  const selectedModels = campaign?.selected_models || [];
+  const groups = new Map<string, CampaignResultItem[]>();
+
+  items.forEach((item) => {
+    const modelName =
+      getFirstString(item, [
+        ["model_name"],
+        ["target_model"],
+        ["model"],
+        ["model_id"],
+        ["provider_model"],
+        ["target_model_id"],
+      ]) || "Unknown model";
+
+    const current = groups.get(modelName) || [];
+    current.push(item);
+    groups.set(modelName, current);
+  });
+
+  selectedModels.forEach((modelName) => {
+    if (!groups.has(modelName)) groups.set(modelName, []);
+  });
+
+  return Array.from(groups.entries()).map(([modelName, rows]) =>
+    summarizeModel(modelName, rows)
+  );
+}
+
+function summarizeModel(modelName: string, rows: CampaignResultItem[]): ModelSummary {
+  const riskScores = rows.map(getRiskScore).filter(Number.isFinite);
+  const averageRiskScore =
+    riskScores.length > 0
+      ? riskScores.reduce((sum, score) => sum + score, 0) / riskScores.length
+      : 0;
+
+  const highestRiskScore = riskScores.length > 0 ? Math.max(...riskScores) : 0;
+  const attackSuccessCount = rows.filter((row) => getAttackSuccess(row) === true).length;
+  const criticalFindings = rows.filter((row) => getSeverity(row).toLowerCase() === "critical").length;
+  const failedTests = rows.filter((row) => getFinalStatus(row).toLowerCase().includes("fail")).length;
+  const passedTests = rows.length > 0 ? rows.length - failedTests : 0;
+
+  return {
+    modelName,
+    provider: modelName.includes(":") ? modelName.split(":")[0] : "Unknown",
+    totalTests: rows.length,
+    passedTests,
+    failedTests,
+    attackSuccessCount,
+    criticalFindings,
+    averageRiskScore,
+    highestRiskScore,
+    severity: severityFromScore(highestRiskScore || averageRiskScore),
+    finalStatus: attackSuccessCount > 0 || highestRiskScore >= 45 ? "Review required" : "Passed",
+    representativeFinding:
+      rows.map(getReasoning).find((value) => value && value !== "No reasoning available.") ||
+      "No reasoning available.",
+  };
+}
+
+function buildFindingGroups(
+  items: CampaignResultItem[],
+  campaign?: CampaignSummary | null
+): FindingGroup[] {
+  const groups = new Map<string, CampaignResultItem[]>();
+
+  items.forEach((item) => {
+    const category = getCategory(item);
+    const current = groups.get(category) || [];
+    current.push(item);
+    groups.set(category, current);
+  });
+
+  if (groups.size === 0) {
+    (campaign?.selected_categories || []).forEach((category) => {
+      groups.set(category, []);
+    });
+  }
+
+  return Array.from(groups.entries()).map(([category, rows]) => {
+    const riskScores = rows.map(getRiskScore).filter(Number.isFinite);
+    const highestRiskScore = riskScores.length > 0 ? Math.max(...riskScores) : 0;
+    const severities = rows.map((row) => getSeverity(row));
+    const severity =
+      severities.find((value) => value.toLowerCase() === "critical") ||
+      severities.find((value) => value.toLowerCase() === "high") ||
+      severityFromScore(highestRiskScore);
+
+    return {
+      category,
+      severity,
+      highestRiskScore,
+      affectedModels: unique(
+        rows
+          .map((row) =>
+            getFirstString(row, [
+              ["model_name"],
+              ["target_model"],
+              ["model"],
+              ["model_id"],
+              ["provider_model"],
+            ])
+          )
+          .filter((value): value is string => Boolean(value))
+      ),
+      affectedTests: rows.length,
+      attackSuccesses: rows.filter((row) => getAttackSuccess(row) === true).length,
+      criticalFindings: rows.filter((row) => getSeverity(row).toLowerCase() === "critical").length,
+      evidence: rows.map(getReasoning).find((value) => value !== "No reasoning available.") || "No detailed evidence available.",
+    };
+  });
+}
+
+function buildRiskSummary(
+  campaign: CampaignSummary | null,
+  modelSummaries: ModelSummary[],
+  findingGroups: FindingGroup[]
+) {
+  const averageRiskScore =
+    Number(campaign?.average_risk_score || 0) ||
+    average(modelSummaries.map((model) => model.averageRiskScore));
+
+  const highestRiskScore =
+    findingGroups.length > 0
+      ? Math.max(...findingGroups.map((group) => group.highestRiskScore))
+      : modelSummaries.length > 0
+        ? Math.max(...modelSummaries.map((model) => model.highestRiskScore))
+        : averageRiskScore;
+
+  const criticalFindings =
+    Number(campaign?.critical_findings || 0) ||
+    findingGroups.reduce((sum, group) => sum + group.criticalFindings, 0) ||
+    modelSummaries.reduce((sum, model) => sum + model.criticalFindings, 0);
+
+  const attackSuccessCount =
+    findingGroups.reduce((sum, group) => sum + group.attackSuccesses, 0) ||
+    modelSummaries.reduce((sum, model) => sum + model.attackSuccessCount, 0);
+
+  const sortedByRisk = [...modelSummaries].sort(
+    (a, b) => a.averageRiskScore - b.averageRiskScore
+  );
+
+  return {
+    averageRiskScore,
+    highestRiskScore,
+    criticalFindings,
+    attackSuccessCount,
+    bestModel: sortedByRisk[0]?.modelName || "Not available",
+    highestRiskModel:
+      sortedByRisk.length > 0
+        ? sortedByRisk[sortedByRisk.length - 1].modelName
+        : "Not available",
+  };
+}
+
+function buildRecommendations(
+  summary: ReturnType<typeof buildRiskSummary>,
+  modelSummaries: ModelSummary[],
+  findingGroups: FindingGroup[]
+): Recommendation[] {
+  const recommendations: Recommendation[] = [];
+
+  findingGroups.forEach((group) => {
+    const priority = priorityFromGroup(group);
+    const actions = actionsForCategory(group.category, priority);
+
+    recommendations.push({
+      title: `${group.category} defense plan`,
+      priority,
+      category: group.category,
+      affectedModels: group.affectedModels.length > 0 ? group.affectedModels : modelSummaries.map((model) => model.modelName),
+      reason:
+        group.affectedTests > 0
+          ? `${group.affectedTests} test result(s) were associated with this category. Highest detected risk score: ${Math.round(group.highestRiskScore)}.`
+          : "This category was selected in the campaign, so baseline defensive controls should be prepared.",
+      actions,
+      validation: validationForCategory(group.category),
+    });
+  });
+
+  if (summary.criticalFindings > 0 || summary.highestRiskScore >= 70) {
+    recommendations.unshift({
+      title: "Immediate critical-risk escalation",
+      priority: "Critical",
+      category: "Overall Risk",
+      affectedModels: modelSummaries.map((model) => model.modelName),
+      reason:
+        "The latest campaign includes critical or high-risk behavior that should be reviewed before production approval.",
+      actions: [
+        "Block production rollout until critical prompts pass regression testing.",
+        "Create a test case for every high-risk finding and rerun it after fixes.",
+        "Require human review for any workflow using the affected model categories.",
+      ],
+      validation:
+        "Rerun the same campaign and confirm critical findings are zero and risk scores are below the approved threshold.",
+    });
+  }
+
+  if (modelSummaries.length > 1 && summary.bestModel !== "Not available") {
+    recommendations.push({
+      title: "Use safest model as the comparison baseline",
+      priority: "Medium",
+      category: "Model Selection",
+      affectedModels: [summary.bestModel],
+      reason: `${summary.bestModel} currently has the lowest average risk score in the latest campaign.`,
+      actions: [
+        "Use this model as the baseline when evaluating future model/provider changes.",
+        "Compare higher-risk models against the same prompt set before approval.",
+        "Track risk deltas between model versions in future reports.",
+      ],
+      validation:
+        "Repeat the campaign after model or policy changes and confirm the selected baseline remains stable.",
+    });
+  }
+
+  recommendations.push({
+    title: "Export and archive evidence",
+    priority: "Low",
+    category: "Reporting",
+    affectedModels: modelSummaries.map((model) => model.modelName),
+    reason:
+      "The latest campaign report should be retained as audit evidence and used for client-ready documentation.",
+    actions: [
+      "Download the JSON report from Reports.",
+      "Attach the findings and recommendations to the final client report.",
+      "Keep the campaign ID and tested model list in the audit record.",
+    ],
+    validation:
+      "Confirm the exported report includes campaign status, model summaries, finding groups, and recommendations.",
+  });
+
+  return recommendations;
+}
+
+function priorityFromGroup(group: FindingGroup): Recommendation["priority"] {
+  if (
+    group.severity.toLowerCase() === "critical" ||
+    group.highestRiskScore >= 70 ||
+    group.criticalFindings > 0
+  ) {
+    return "Critical";
+  }
+
+  if (
+    group.severity.toLowerCase() === "high" ||
+    group.highestRiskScore >= 45 ||
+    group.attackSuccesses > 0
+  ) {
+    return "High";
+  }
+
+  if (group.highestRiskScore >= 25 || group.affectedTests > 0) {
+    return "Medium";
+  }
+
+  return "Low";
+}
+
+function actionsForCategory(category: string, priority: Recommendation["priority"]) {
+  const normalized = category.toLowerCase();
+
+  if (normalized.includes("prompt injection")) {
+    return [
+      "Add strict system instruction boundaries and refuse user attempts to override hidden policies.",
+      "Run input classification before model execution and block prompt-injection patterns.",
+      "Add regression tests for direct, indirect, and role-play injection attempts.",
+    ];
+  }
+
+  if (normalized.includes("system prompt") || normalized.includes("leak")) {
+    return [
+      "Add output filters for system prompt disclosure, hidden policy text, and internal configuration leaks.",
+      "Reduce sensitive policy wording exposed to the model context where possible.",
+      "Add canary phrases and automated checks to detect prompt leakage.",
+    ];
+  }
+
+  if (normalized.includes("rag")) {
+    return [
+      "Sanitize retrieved documents before they are inserted into the model context.",
+      "Separate user content, retrieved content, and system instructions with clear trust boundaries.",
+      "Add retrieval-source validation and block documents that contain instructions to the model.",
+    ];
+  }
+
+  if (normalized.includes("jailbreak")) {
+    return [
+      "Add refusal consistency tests for role-play, coercion, emotional pressure, and policy bypass attempts.",
+      "Strengthen output evaluation with a second-stage safety judge.",
+      "Require escalation for any jailbreak-like response that produces unsafe instructions.",
+    ];
+  }
+
+  if (normalized.includes("data") || normalized.includes("exfiltration")) {
+    return [
+      "Mask sensitive data before model input and scan output for secrets or identifiers.",
+      "Add allowlist-based output rules for sensitive workflows.",
+      "Log and review any response that attempts to reveal credentials, keys, or private user data.",
+    ];
+  }
+
+  return [
+    priority === "Critical"
+      ? "Create an immediate remediation ticket and block release until retesting passes."
+      : "Create a remediation task for this finding category.",
+    "Add this category to the recurring automated regression campaign.",
+    "Document expected safe behavior and compare it against the model response.",
+  ];
+}
+
+function validationForCategory(category: string) {
+  const normalized = category.toLowerCase();
+
+  if (normalized.includes("prompt injection")) {
+    return "Rerun prompt-injection scenarios and confirm the model ignores instruction override attempts.";
+  }
+
+  if (normalized.includes("system prompt") || normalized.includes("leak")) {
+    return "Rerun leakage scenarios and confirm no hidden prompt, system policy, or internal configuration is disclosed.";
+  }
+
+  if (normalized.includes("rag")) {
+    return "Rerun RAG injection scenarios with untrusted documents and confirm retrieved text cannot control model behavior.";
+  }
+
+  if (normalized.includes("jailbreak")) {
+    return "Rerun jailbreak scenarios and confirm unsafe requests are refused consistently.";
+  }
+
+  return "Rerun the same campaign and confirm risk scores decrease with no critical findings.";
+}
+
+function Panel({
+  eyebrow,
+  title,
+  description,
+  children,
+}: {
+  eyebrow: string;
+  title: string;
+  description: string;
+  children: ReactNode;
+}) {
+  return (
+    <section className="rounded-[22px] border border-[#353637] bg-[#27292a] p-6">
+      <p className="text-xs uppercase tracking-[0.24em] text-[#4ad7ff]">{eyebrow}</p>
+      <h2 className="mt-2 text-2xl font-bold">{title}</h2>
+      <p className="mt-2 text-sm leading-6 text-[#a9a9a9]">{description}</p>
+      <div className="mt-6">{children}</div>
+    </section>
+  );
+}
+
+function SummaryCard({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone: Tone;
+}) {
+  return (
+    <div className="rounded-[18px] border border-[#353637] bg-[#27292a] p-5">
+      <p className="text-xs uppercase tracking-[0.18em] text-[#727272]">{label}</p>
+      <p className={`mt-3 truncate text-xl font-bold ${toneTextClass(tone)}`}>{value}</p>
+    </div>
+  );
+}
+
+function DetailCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-[16px] border border-white/[0.08] bg-[#1f2122] p-4">
+      <p className="text-xs uppercase tracking-[0.16em] text-[#727272]">{label}</p>
+      <p className="mt-2 break-words font-semibold text-white">{value}</p>
+    </div>
+  );
+}
+
+function MetricBox({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone: Tone;
+}) {
+  return (
+    <div className="rounded-[18px] border border-white/[0.08] bg-[#1f2122] p-5">
+      <p className="text-xs uppercase tracking-[0.16em] text-[#727272]">{label}</p>
+      <p className={`mt-3 text-3xl font-bold ${toneTextClass(tone)}`}>{value}</p>
+    </div>
+  );
+}
+
+function HighlightCard({
+  label,
+  value,
+  description,
+  tone,
+}: {
+  label: string;
+  value: string;
+  description: string;
+  tone: Tone;
+}) {
+  return (
+    <div className="rounded-[18px] border border-white/[0.08] bg-[#1f2122] p-5">
+      <p className="text-xs uppercase tracking-[0.16em] text-[#727272]">{label}</p>
+      <p className={`mt-2 text-2xl font-bold ${toneTextClass(tone)}`}>{value}</p>
+      <p className="mt-2 text-sm leading-6 text-[#a9a9a9]">{description}</p>
+    </div>
+  );
+}
+
+function ModelSummaryCard({ model }: { model: ModelSummary }) {
+  const tone = riskTone(model.highestRiskScore || model.averageRiskScore);
+
+  return (
+    <article className="rounded-[18px] border border-white/[0.08] bg-[#1f2122] p-5">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h3 className="text-lg font-bold text-white">{model.modelName}</h3>
+          <p className="mt-1 text-sm text-[#8f8f8f]">{model.provider}</p>
+        </div>
+
+        <span className={`rounded-full border px-3 py-1 text-xs font-bold ${toneBadgeClass(tone)}`}>
+          {model.severity}
+        </span>
+      </div>
+
+      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+        <MiniMetric label="Total Tests" value={String(model.totalTests)} />
+        <MiniMetric label="Passed" value={String(model.passedTests)} />
+        <MiniMetric label="Failed" value={String(model.failedTests)} />
+        <MiniMetric label="Attack Successes" value={String(model.attackSuccessCount)} />
+        <MiniMetric label="Avg Risk" value={String(Math.round(model.averageRiskScore))} />
+        <MiniMetric label="Max Risk" value={String(Math.round(model.highestRiskScore))} />
+      </div>
+
+      <p className="mt-4 text-sm leading-6 text-[#d4d4d4]">
+        <span className="font-semibold text-[#4ad7ff]">Summary:</span>{" "}
+        {model.finalStatus}. {model.representativeFinding}
+      </p>
+    </article>
+  );
+}
+
+function FindingGroupCard({ group }: { group: FindingGroup }) {
+  const tone = riskTone(group.highestRiskScore);
+
+  return (
+    <article className="rounded-[14px] border border-white/[0.08] bg-[#27292a] p-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <p className="text-sm font-bold text-white">{group.category}</p>
+          <p className="mt-1 text-xs text-[#8f8f8f]">
+            {group.affectedTests} tests · {group.affectedModels.length || 0} models
+          </p>
+        </div>
+
+        <span className={`rounded-full border px-3 py-1 text-xs font-bold ${toneBadgeClass(tone)}`}>
+          {group.severity}
+        </span>
+      </div>
+    </article>
+  );
+}
+
+function ResultItemCard({ item, index }: { item: CampaignResultItem; index: number }) {
+  const modelName =
+    getFirstString(item, [["model_name"], ["target_model"], ["model"], ["model_id"]]) ||
+    "Unknown model";
+
+  const severity = getSeverity(item);
+  const riskScore = getRiskScore(item);
+  const tone = riskTone(riskScore);
+
+  return (
+    <article className="rounded-[14px] border border-white/[0.08] bg-[#1f2122] p-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <p className="text-sm font-bold text-white">
+            #{index + 1} · {modelName}
+          </p>
+          <p className="mt-1 text-xs text-[#8f8f8f]">{getCategory(item)}</p>
+        </div>
+
+        <span className={`rounded-full border px-3 py-1 text-xs font-bold ${toneBadgeClass(tone)}`}>
+          {severity} · {Math.round(riskScore)}
+        </span>
+      </div>
+
+      <p className="mt-3 text-sm leading-6 text-[#d4d4d4]">{getReasoning(item)}</p>
+    </article>
+  );
+}
+
+function MiniMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-[14px] bg-[#27292a] p-3">
+      <p className="text-xs uppercase tracking-[0.14em] text-[#727272]">{label}</p>
+      <p className="mt-1 font-bold text-white">{value}</p>
+    </div>
+  );
+}
+
+function RecommendationCard({ item }: { item: Recommendation }) {
+  const tone = priorityTone(item.priority);
+
+  return (
+    <article className="rounded-[18px] border border-white/[0.08] bg-[#1f2122] p-5">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h3 className="text-lg font-bold text-white">{item.title}</h3>
+          <p className="mt-1 text-sm text-[#8f8f8f]">
+            {item.category} · Affected models: {item.affectedModels.length > 0 ? item.affectedModels.join(", ") : "N/A"}
+          </p>
+        </div>
+
+        <span className={`rounded-full border px-3 py-1 text-xs font-bold ${toneBadgeClass(tone)}`}>
+          {item.priority}
+        </span>
+      </div>
+
+      <p className="mt-4 text-sm leading-6 text-[#d4d4d4]">{item.reason}</p>
+
+      <div className="mt-4 rounded-[14px] border border-white/[0.08] bg-[#27292a] p-4">
+        <p className="text-xs uppercase tracking-[0.16em] text-[#727272]">
+          Recommended actions
+        </p>
+        <ul className="mt-3 space-y-2 text-sm leading-6 text-[#d4d4d4]">
+          {item.actions.map((action) => (
+            <li key={action} className="flex gap-2">
+              <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#4ad7ff]" />
+              <span>{action}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="mt-4 rounded-[14px] border border-[#30d158]/20 bg-[#30d158]/10 p-4">
+        <p className="text-xs uppercase tracking-[0.16em] text-[#30d158]">
+          Validation
+        </p>
+        <p className="mt-2 text-sm leading-6 text-[#d4d4d4]">{item.validation}</p>
+      </div>
+    </article>
+  );
+}
+
+function LoadingState() {
+  return (
+    <div className="rounded-[18px] border border-white/[0.08] bg-[#1f2122] p-6 text-sm text-[#a9a9a9]">
+      Loading latest backend campaign report...
+    </div>
+  );
+}
+
+function EmptyState({
+  title = "No latest campaign report available",
+  message = "Run an automated campaign first, then return to Reports.",
+}: {
+  title?: string;
+  message?: string;
+}) {
+  return (
+    <div className="rounded-[18px] border border-white/[0.08] bg-[#1f2122] p-6">
+      <h3 className="text-xl font-bold text-white">{title}</h3>
+      <p className="mt-3 max-w-2xl text-sm leading-6 text-[#a9a9a9]">{message}</p>
+
+      <div className="mt-5 flex flex-wrap gap-3">
+        <a
+          href="/campaigns"
+          className="rounded-full bg-[#ff3434] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#ff4b4b]"
+        >
+          Run Campaign
+        </a>
+        <a
+          href="/blue-team"
+          className="rounded-full border border-white/[0.12] bg-[#27292a] px-4 py-2 text-sm font-semibold text-white transition hover:border-[#30d158]/45 hover:text-[#30d158]"
+        >
+          Legacy Blue Team
+        </a>
+      </div>
+    </div>
+  );
+}
+
+type Tone = "critical" | "high" | "medium" | "low" | "neutral" | "cyan";
+
+function riskTone(score: number): Tone {
+  if (score >= 70) return "critical";
+  if (score >= 45) return "high";
+  if (score >= 25) return "medium";
+  return "low";
+}
+
+function priorityTone(priority: Recommendation["priority"]): Tone {
+  if (priority === "Critical") return "critical";
+  if (priority === "High") return "high";
+  if (priority === "Medium") return "medium";
+  return "low";
+}
+
+function statusTone(status?: string): Tone {
+  const normalized = String(status || "").toLowerCase();
+  if (normalized.includes("fail")) return "critical";
+  if (normalized.includes("complete")) return "low";
+  if (normalized.includes("run") || normalized.includes("queue")) return "cyan";
+  return "neutral";
+}
+
+function severityFromScore(score: number) {
+  if (score >= 70) return "Critical";
+  if (score >= 45) return "High";
+  if (score >= 25) return "Medium";
+  return "Low";
+}
+
+function toneTextClass(tone: Tone) {
+  return {
+    critical: "text-[#ff3434]",
+    high: "text-[#ffb347]",
+    medium: "text-[#ffd166]",
+    low: "text-[#30d158]",
+    neutral: "text-white",
+    cyan: "text-[#4ad7ff]",
+  }[tone];
+}
+
+function toneBadgeClass(tone: Tone) {
+  return {
+    critical: "border-[#ff3434]/35 bg-[#ff3434]/10 text-[#ff3434]",
+    high: "border-[#ffb347]/35 bg-[#ffb347]/10 text-[#ffb347]",
+    medium: "border-[#ffd166]/35 bg-[#ffd166]/10 text-[#ffd166]",
+    low: "border-[#30d158]/35 bg-[#30d158]/10 text-[#30d158]",
+    neutral: "border-white/[0.12] bg-white/[0.06] text-[#d4d4d4]",
+    cyan: "border-[#4ad7ff]/35 bg-[#4ad7ff]/10 text-[#4ad7ff]",
+  }[tone];
+}
+
+function sourceLabel(value?: string | null) {
+  if (!value) return "Library assets";
+  return value
+    .split("_")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function average(values: number[]) {
+  const valid = values.filter(Number.isFinite);
+  return valid.length ? valid.reduce((sum, value) => sum + value, 0) / valid.length : 0;
+}
+
+function numberValue(value: unknown) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function unique(values: string[]) {
+  return Array.from(new Set(values));
+}
+
+function toRecord(value: unknown): Record<string, unknown> | null {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return null;
+  }
+
+  return value as Record<string, unknown>;
+}
+
+function getPath(value: unknown, path: string[]): unknown {
+  let current: unknown = value;
+
+  for (const key of path) {
+    const record = toRecord(current);
+    if (!record) return undefined;
+    current = record[key];
+  }
+
+  return current;
+}
+
+function getFirstString(value: unknown, paths: string[][]): string | null {
+  for (const path of paths) {
+    const current = getPath(value, path);
+
+    if (typeof current === "string" && current.trim()) return current;
+    if (typeof current === "number") return String(current);
+    if (typeof current === "boolean") return current ? "Yes" : "No";
+  }
+
+  return null;
+}
+
+function getFirstNumber(value: unknown, paths: string[][], fallback = 0): number {
+  for (const path of paths) {
+    const current = getPath(value, path);
+    const parsed = Number(current);
+
+    if (Number.isFinite(parsed)) return parsed;
+  }
+
+  return fallback;
+}
+
+function getFirstBoolean(value: unknown, paths: string[][]): boolean | null {
+  for (const path of paths) {
+    const current = getPath(value, path);
+
+    if (typeof current === "boolean") return current;
+
+    if (typeof current === "string") {
+      const normalized = current.toLowerCase();
+      if (["true", "yes", "success", "passed"].includes(normalized)) return true;
+      if (["false", "no", "failed", "blocked"].includes(normalized)) return false;
+    }
+  }
+
+  return null;
+}
+
+function getRiskScore(value: unknown) {
+  return getFirstNumber(value, [
+    ["risk_score"],
+    ["average_risk_score"],
+    ["score"],
+    ["risk_assessment", "risk_score"],
+    ["input_evaluation", "risk_score"],
+    ["output_evaluation", "risk_score"],
+  ]);
+}
+
+function getSeverity(value: unknown) {
+  return (
+    getFirstString(value, [
+      ["severity"],
+      ["risk_level"],
+      ["risk_assessment", "severity"],
+      ["input_evaluation", "risk_level"],
+      ["output_evaluation", "severity"],
+    ]) || severityFromScore(getRiskScore(value))
+  );
+}
+
+function getAttackSuccess(value: unknown) {
+  return getFirstBoolean(value, [
+    ["attack_success"],
+    ["jailbreak_success"],
+    ["success"],
+    ["output_evaluation", "attack_success"],
+  ]);
+}
+
+function getFinalStatus(value: unknown) {
+  return (
+    getFirstString(value, [
+      ["final_status"],
+      ["status"],
+      ["verdict"],
+      ["output_evaluation", "final_status"],
+    ]) || "Unknown"
+  );
+}
+
+function getReasoning(value: unknown) {
+  return (
+    getFirstString(value, [
+      ["reasoning"],
+      ["summary"],
+      ["analysis"],
+      ["output_evaluation", "reasoning"],
+      ["risk_assessment", "reasoning"],
+    ]) || "No reasoning available."
+  );
+}
+
+function getCategory(value: unknown) {
+  return (
+    getFirstString(value, [
+      ["category"],
+      ["scenario_category"],
+      ["attack_category"],
+      ["owasp_category"],
+      ["scenario", "category"],
+      ["attack_scenario", "category"],
+      ["input_evaluation", "category"],
+      ["output_evaluation", "category"],
+    ]) || "General AI Risk"
+  );
+}

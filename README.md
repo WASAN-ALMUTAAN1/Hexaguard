@@ -1,74 +1,16 @@
-# Hexaguard Final Connected Frontend
+# HexaGuard AI
+Red Teaming and Blue Teaming Platform for Secure AI Deployment.
 
-This package contains the final connected frontend for Hexaguard.
+## Overview
+A professional SOC-style web platform to test AI models against adversarial attacks, evaluate responses, map vulnerabilities to OWASP LLM Top 10 2025, and generate actionable Blue Team mitigations.
 
-## Pages
+## Tech Stack
+* **Frontend**: Next.js, React, Tailwind CSS, TypeScript
+* **Backend**: FastAPI, Python, PostgreSQL, SQLAlchemy, Alembic
+* **Workers**: Celery, Redis
+* **Deployment**: Docker Compose
 
-```text
-index.html
-manual-red-teaming.html
-prompt-sandbox.html
-```
-
-## Shared connection files
-
-```text
-assets/js/config.js
-assets/js/apiClient.js
-```
-
-## Page-specific logic
-
-```text
-assets/js/app.js
-assets/js/manualRedTeaming.js
-assets/js/promptSandbox.js
-```
-
-## Page-specific styles
-
-```text
-assets/css/styles.css
-assets/css/manual-red-teaming.css
-assets/css/prompt-sandbox.css
-```
-
-## Run locally
-
-```bash
-python3 -m http.server 5173
-```
-
-Open:
-
-```text
-http://localhost:5173/index.html
-http://localhost:5173/manual-red-teaming.html
-http://localhost:5173/prompt-sandbox.html
-```
-
-## Backend connection
-
-Open:
-
-```text
-assets/js/config.js
-```
-
-Set:
-
-```js
-MOCK_MODE: false
-```
-
-Then update:
-
-```js
-API_BASE_URL: "https://backend-domain.com/api"
-```
-
-## Connected modules
-
-- Scenario Library
-- Manual Red Teaming Workspace
-- Prompt Risk Sandbox
+## Local Setup
+1. Clone the repository.
+2. Run `docker-compose up -d` to start PostgreSQL and Redis.
+3. Check backend and frontend directories for specific setup instructions.
