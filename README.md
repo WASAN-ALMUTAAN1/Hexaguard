@@ -49,10 +49,8 @@ It combines a modern Next.js frontend, FastAPI backend, SQLAlchemy database mode
 * [Installation](#installation)
 * [Running the Project](#running-the-project)
 * [Environment Variables](#environment-variables)
-* [Screenshots](#screenshots)
-* [Documentation Website](#documentation-website)
 * [Current Project Status](#current-project-status)
-* [Future Improvements](#future-improvements)
+
 
 ---
 
