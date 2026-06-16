@@ -6,15 +6,22 @@
 src="https://capsule-render.vercel.app/api?type=waving&color=0:020617,30:450a0a,65:991b1b,100:dc2626&height=260&section=header&text=%F0%9F%9B%A1%EF%B8%8F%20HexaGuard&fontSize=72&fontColor=ffffff&animation=fadeIn&fontAlignY=38&desc=AI%20Red-Teaming%20Platform%20for%20LLM%20Security%20Testing&descSize=20&descAlignY=62"
 alt="HexaGuard Header"
 />
-
-<!-- Animated Value Proposition -->
-
+----
+<!-- Demo Preview -->
 <img
-src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=23&duration=2600&pause=900&color=FF3B3B&center=true&vCenter=true&width=950&lines=Configure+Target+LLMs;Run+Manual+and+Automated+Red-Team+Tests;Evaluate+Responses+with+AI-Assisted+Judging;Score+Risk+and+Compare+Models;Generate+Security+Reports+and+Mitigation+Guidance"
-alt="HexaGuard Typing Animation"
+src="assets/hexaguard_demo_logical_clear_1080p.gif"
+alt="HexaGuard AI Red Teaming Demo Preview"
+width="900"
 />
 
 <br />
+<h3>
+  A full-stack AI security platform for testing, evaluating, comparing, and reporting large language model behavior.
+</h3>
+<p align="center">
+  <b>HexaGuard</b> provides an end-to-end workflow for scenario-based LLM security testing, including model provider setup, attack scenario management, manual red-team testing, automated campaigns, AI-assisted response evaluation, risk scoring, model comparison, Blue Team recommendations, and structured security reporting.
+</p>
+
 <br />
 
 <!-- Security Identity Badges -->
@@ -24,29 +31,11 @@ alt="HexaGuard Typing Animation"
 <img src="https://img.shields.io/badge/Risk%20Analysis-Model%20Safety-dc2626?style=for-the-badge" />
 <img src="https://img.shields.io/badge/Defense-Blue%20Team%20Guidance-1e3a8a?style=for-the-badge" />
 
-<br />
-<br />
-
-<!-- Demo Preview -->
-
-<img
-src="assets/hexaguard_demo_logical_clear_1080p.gif"
-alt="HexaGuard AI Red Teaming Demo Preview"
-width="900"
-/>
 
 <br />
-<br />
-
-<h3>
-  A full-stack AI security platform for testing, evaluating, comparing, and reporting large language model behavior.
-</h3>
-
-<p align="center">
-  <b>HexaGuard</b> provides an end-to-end workflow for scenario-based LLM security testing, including model provider setup, attack scenario management, manual red-team testing, automated campaigns, AI-assisted response evaluation, risk scoring, model comparison, Blue Team recommendations, and structured security reporting.
-</p>
 
 </div>
+
 
 ---
 
