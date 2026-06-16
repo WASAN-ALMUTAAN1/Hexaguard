@@ -1,29 +1,274 @@
 <div align="center">
 
-# 🛡️ HexaGuard
+<!-- Animated Header -->
 
-### AI Red-Teaming Platform for LLM Security Testing
+<img
+src="https://capsule-render.vercel.app/api?type=waving&color=0:020617,30:450a0a,65:991b1b,100:dc2626&height=260&section=header&text=%F0%9F%9B%A1%EF%B8%8F%20HexaGuard&fontSize=72&fontColor=ffffff&animation=fadeIn&fontAlignY=38&desc=AI%20Red-Teaming%20Platform%20for%20LLM%20Security%20Testing&descSize=20&descAlignY=62"
+alt="HexaGuard Header"
+/>
 
-**HexaGuard** is a full-stack AI red-teaming platform designed to help users test, evaluate, compare, and report the security behavior of large language models and AI systems.
+<!-- Animated Value Proposition -->
 
-It combines a modern Next.js frontend, FastAPI backend, SQLAlchemy database models, automated campaign testing, manual red-team testing, sandbox evaluation, model provider testing, AI evaluation, risk scoring, Blue Team recommendations, and final security reporting.
+<img
+src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=23&duration=2600&pause=900&color=FF3B3B&center=true&vCenter=true&width=950&lines=Configure+Target+LLMs;Run+Manual+and+Automated+Red-Team+Tests;Evaluate+Responses+with+AI-Assisted+Judging;Score+Risk+and+Compare+Models;Generate+Security+Reports+and+Mitigation+Guidance"
+alt="HexaGuard Typing Animation"
+/>
+
+<br />
+<br />
+
+<!-- Security Identity Badges -->
+
+<img src="https://img.shields.io/badge/AI%20Security-Red%20Teaming-991b1b?style=for-the-badge" />
+<img src="https://img.shields.io/badge/LLM%20Evaluation-AI%20Assisted%20Judge-7f1d1d?style=for-the-badge" />
+<img src="https://img.shields.io/badge/Risk%20Analysis-Model%20Safety-dc2626?style=for-the-badge" />
+<img src="https://img.shields.io/badge/Defense-Blue%20Team%20Guidance-1e3a8a?style=for-the-badge" />
+
+<br />
+<br />
+
+<!-- Demo Preview -->
+
+<img
+src="assets/hexaguard_demo_logical_clear_1080p.gif"
+alt="HexaGuard AI Red Teaming Demo Preview"
+width="900"
+/>
+
+<br />
+<br />
+
+<h3>
+  A full-stack AI security platform for testing, evaluating, comparing, and reporting large language model behavior.
+</h3>
+
+<p align="center">
+  <b>HexaGuard</b> provides an end-to-end workflow for scenario-based LLM security testing, including model provider setup, attack scenario management, manual red-team testing, automated campaigns, AI-assisted response evaluation, risk scoring, model comparison, Blue Team recommendations, and structured security reporting.
+</p>
+
+</div>
+
+---
+
+## Platform Workflow
+
+<div align="center">
+
+<table>
+  <tr>
+    <td align="center" width="16.6%">
+      <h2>01</h2>
+      <h3>🧩 Configure</h3>
+      <sub>Register target models and provider settings</sub>
+    </td>
+    <td align="center" width="16.6%">
+      <h2>02</h2>
+      <h3>📚 Select</h3>
+      <sub>Choose scenarios, datasets, and categories</sub>
+    </td>
+    <td align="center" width="16.6%">
+      <h2>03</h2>
+      <h3>🎯 Test</h3>
+      <sub>Run manual tests or automated campaigns</sub>
+    </td>
+    <td align="center" width="16.6%">
+      <h2>04</h2>
+      <h3>🧠 Evaluate</h3>
+      <sub>Analyze model responses with detection and AI judging</sub>
+    </td>
+    <td align="center" width="16.6%">
+      <h2>05</h2>
+      <h3>📊 Score</h3>
+      <sub>Calculate risk and compare model behavior</sub>
+    </td>
+    <td align="center" width="16.6%">
+      <h2>06</h2>
+      <h3>📄 Report</h3>
+      <sub>Generate findings and mitigation guidance</sub>
+    </td>
+  </tr>
+</table>
 
 <br />
 
-<img src="assets/hexaguard_demo_logical_clear_1080p.gif" alt="HexaGuard Demo Preview" width="900">
+<img src="https://img.shields.io/badge/End--to--End%20Flow-Configure%20%E2%86%92%20Select%20%E2%86%92%20Test%20%E2%86%92%20Evaluate%20%E2%86%92%20Score%20%E2%86%92%20Recommend%20%E2%86%92%20Report-111827?style=for-the-badge" />
+
+</div>
 
 <br />
 
+---
 
+## Core Capabilities
 
-![Next.js](https://img.shields.io/badge/Frontend-Next.js-black?style=for-the-badge\&logo=next.js)
-![React](https://img.shields.io/badge/UI-React-20232A?style=for-the-badge\&logo=react)
-![TypeScript](https://img.shields.io/badge/Language-TypeScript-3178C6?style=for-the-badge\&logo=typescript)
-![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?style=for-the-badge\&logo=fastapi)
-![Python](https://img.shields.io/badge/AI%20Logic-Python-3776AB?style=for-the-badge\&logo=python)
-![SQLAlchemy](https://img.shields.io/badge/ORM-SQLAlchemy-D71F00?style=for-the-badge)
-![Alembic](https://img.shields.io/badge/Migrations-Alembic-444444?style=for-the-badge)
-![Docker](https://img.shields.io/badge/Container-Docker-2496ED?style=for-the-badge\&logo=docker)
+<div align="center">
+
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <h3>🧩 Model Provider Setup</h3>
+      <p>
+        Configure target LLMs and provider settings so different models can be tested through a consistent red-teaming workflow.
+      </p>
+      <p>
+        <img src="https://img.shields.io/badge/Stage-Model%20Setup-111827?style=flat-square" />
+        <img src="https://img.shields.io/badge/Focus-Provider%20Testing-374151?style=flat-square" />
+      </p>
+    </td>
+    <td width="50%" valign="top">
+      <h3>📚 Scenario and Asset Library</h3>
+      <p>
+        Manage reusable attack scenarios, prompts, categories, datasets, and evaluation inputs for repeatable manual and automated testing.
+      </p>
+      <p>
+        <img src="https://img.shields.io/badge/Stage-Test%20Assets-7f1d1d?style=flat-square" />
+        <img src="https://img.shields.io/badge/Focus-Scenario%20Library-b91c1c?style=flat-square" />
+      </p>
+    </td>
+  </tr>
+
+  <tr>
+    <td width="50%" valign="top">
+      <h3>🎯 Manual Red-Team Testing</h3>
+      <p>
+        Run targeted prompts against selected models to inspect specific risks, unsafe responses, policy violations, and model behavior under controlled conditions.
+      </p>
+      <p>
+        <img src="https://img.shields.io/badge/Stage-Manual%20Testing-dc2626?style=flat-square" />
+        <img src="https://img.shields.io/badge/Focus-Targeted%20Prompts-7f1d1d?style=flat-square" />
+      </p>
+    </td>
+    <td width="50%" valign="top">
+      <h3>⚙️ Automated Attack Campaigns</h3>
+      <p>
+        Execute batch red-team campaigns across scenarios, datasets, categories, target models, and mutation strategies to evaluate model resilience at scale.
+      </p>
+      <p>
+        <img src="https://img.shields.io/badge/Stage-Automated%20Testing-991b1b?style=flat-square" />
+        <img src="https://img.shields.io/badge/Focus-Batch%20Campaigns-450a0a?style=flat-square" />
+      </p>
+    </td>
+  </tr>
+
+  <tr>
+    <td width="50%" valign="top">
+      <h3>🧠 AI-Assisted Response Evaluation</h3>
+      <p>
+        Analyze model outputs using detection signals, response classification, AI-assisted judging, confidence indicators, and structured safety evaluation.
+      </p>
+      <p>
+        <img src="https://img.shields.io/badge/Stage-Response%20Evaluation-dc2626?style=flat-square" />
+        <img src="https://img.shields.io/badge/Focus-AI%20Judge-b91c1c?style=flat-square" />
+      </p>
+    </td>
+    <td width="50%" valign="top">
+      <h3>📊 Risk Scoring and Model Comparison</h3>
+      <p>
+        Convert test outcomes into severity levels, risk scores, safety indicators, comparison insights, and report-ready evidence.
+      </p>
+      <p>
+        <img src="https://img.shields.io/badge/Stage-Risk%20Analysis-ef4444?style=flat-square" />
+        <img src="https://img.shields.io/badge/Focus-Model%20Comparison-991b1b?style=flat-square" />
+      </p>
+    </td>
+  </tr>
+
+  <tr>
+    <td width="50%" valign="top">
+      <h3>🛡️ Blue Team Recommendations</h3>
+      <p>
+        Generate defensive guidance and mitigation actions to help reduce model risk and improve the security posture of AI systems.
+      </p>
+      <p>
+        <img src="https://img.shields.io/badge/Stage-Mitigation-1e3a8a?style=flat-square" />
+        <img src="https://img.shields.io/badge/Focus-Blue%20Team%20Guidance-2563eb?style=flat-square" />
+      </p>
+    </td>
+    <td width="50%" valign="top">
+      <h3>📄 Security Reporting</h3>
+      <p>
+        Produce structured reports that summarize test outcomes, risk levels, evidence, model performance, and recommended mitigation steps.
+      </p>
+      <p>
+        <img src="https://img.shields.io/badge/Stage-Reporting-111827?style=flat-square" />
+        <img src="https://img.shields.io/badge/Focus-Security%20Findings-374151?style=flat-square" />
+      </p>
+    </td>
+  </tr>
+</table>
+
+</div>
+
+<br />
+
+---
+
+## Technology Stack
+
+<div align="center">
+
+<table>
+  <tr>
+    <td align="center" width="120">
+      <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nextjs/nextjs-original.svg" width="48" height="48" alt="Next.js" />
+      <br />
+      <b>Next.js</b>
+      <br />
+      <sub>Frontend</sub>
+    </td>
+    <td align="center" width="120">
+      <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/react/react-original.svg" width="48" height="48" alt="React" />
+      <br />
+      <b>React</b>
+      <br />
+      <sub>UI</sub>
+    </td>
+    <td align="center" width="120">
+      <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/typescript/typescript-original.svg" width="48" height="48" alt="TypeScript" />
+      <br />
+      <b>TypeScript</b>
+      <br />
+      <sub>Language</sub>
+    </td>
+    <td align="center" width="120">
+      <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/fastapi/fastapi-original.svg" width="48" height="48" alt="FastAPI" />
+      <br />
+      <b>FastAPI</b>
+      <br />
+      <sub>Backend</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="120">
+      <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg" width="48" height="48" alt="Python" />
+      <br />
+      <b>Python</b>
+      <br />
+      <sub>AI Logic</sub>
+    </td>
+    <td align="center" width="120">
+      <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/sqlalchemy/sqlalchemy-original.svg" width="48" height="48" alt="SQLAlchemy" />
+      <br />
+      <b>SQLAlchemy</b>
+      <br />
+      <sub>ORM</sub>
+    </td>
+  <td align="center" width="120">
+  <img src="https://img.icons8.com/fluency/96/database.png" width="48" height="48" alt="Database Migrations" />
+  <br />
+  <b>Alembic</b>
+  <br />
+  <sub>DB Migrations</sub>
+</td>
+    <td align="center" width="120">
+      <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/docker/docker-original.svg" width="48" height="48" alt="Docker" />
+      <br />
+      <b>Docker</b>
+      <br />
+      <sub>Container</sub>
+    </td>
+  </tr>
+</table>
 
 </div>
 
