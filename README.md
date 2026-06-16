@@ -1600,8 +1600,8 @@ flowchart LR
 ## Clone the Repository
 
 ```bash
-git clone <repository-url>
-cd HexaGuard-Clean-Team
+git clone <[repository-url](https://github.com/WASAN-ALMUTAAN1/Hexaguard)>
+cd HexaGuard
 ```
 
 ## Frontend Dependencies
