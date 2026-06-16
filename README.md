@@ -649,7 +649,7 @@ erDiagram
 | FR-27 | Seed Scenario Data                | Provide safe demo scenarios for initial testing and frontend demonstration             | Implemented                                         |
 | FR-28 | Loading and Error States          | Show loading and error states when API calls are pending or fail                       | Implemented                                         |
 | FR-29 | Navigation                        | Provide navigation between core modules                                                | Implemented                                         |
-| FR-30 | Documentation and Screenshots     | Include README documentation and screenshot/demo assets                                | In progress                                         |
+                                  
 
 ---
 
@@ -670,8 +670,7 @@ erDiagram
 | NFR-11 | Scalability           | Support multiple models, scenarios, datasets, and result records                                     | Implemented at project level / may need production scaling |
 | NFR-12 | Auditability          | Preserve enough evidence for review, reporting, and evaluation                                       | Implemented through manual/campaign records                |
 | NFR-13 | Reliability           | Separate completed, failed, error, and review states                                                 | Implemented / should be continuously tested                |
-| NFR-14 | Documentation Quality | Provide clear README, screenshots, and setup instructions                                            | In progress                                                |
-| NFR-15 | Presentation Quality  | GitHub README should be professional and suitable for judging panels                                 | In progress                                                |
+                                   
 
 ### Quality Attribute Map
 
@@ -735,7 +734,6 @@ The current codebase includes access-control related logic in:
 backend/app/core/access_control.py
 ```
 
-Based on the current project structure, this area appears focused on provider access and credential-related flows rather than a fully confirmed persistent user account system.
 
 | Area                         | Description                                                       |
 | ---------------------------- | ----------------------------------------------------------------- |
@@ -743,15 +741,6 @@ Based on the current project structure, this area appears focused on provider ac
 | BYOK / custom key flow       | Supports user-provided model provider credentials where available |
 | Demo credit logic            | Demo credit handling appears in access-control logic              |
 | Provider testing             | Works with model provider testing workflows                       |
-
-### Authentication Status
-
-| Area                            | Current Status                                           |
-| ------------------------------- | -------------------------------------------------------- |
-| Persistent user database table  | Not clearly shown in current active database model files |
-| Full registration/login backend | Not clearly shown in the current code                    |
-| Role-based access control       | Not clearly shown in the current code                    |
-| Provider-level access control   | Present in backend access-control logic                  |
 
 ---
 
@@ -871,7 +860,7 @@ backend/app/core/config.py
 | Compare            | Present; report-ready comparison is being moved into Reports                                             |
 | Authentication     | Full persistent auth/user model is not clearly shown in current active model files                       |
 | Build Warnings     | Some unused variables/components are present and should be cleaned later                                 |
-| Documentation      | README and demo assets are in progress                                                                   |
+
 
 ---
 
@@ -883,7 +872,7 @@ backend/app/core/config.py
 | Full-stack scope    | Includes frontend pages, backend APIs, database models, and AI-specific services                        |
 | Domain relevance    | Focuses on AI security, LLM testing, red-team workflows, and defensive recommendations                  |
 | Evaluation workflow | Supports manual tests, automated campaigns, risk scoring, model comparison, and reporting               |
-| Presentation        | Includes a cyber/SOC-style UI direction, animated README header, demo GIF, and structured documentation |
+
 
 ---
 
@@ -897,14 +886,6 @@ backend/app/core/config.py
 | Compare Page          | Decide whether comparison remains standalone or fully moves into Reports              |
 | Dataset UI            | Confirm persistent dataset management is fully connected to backend storage           |
 | Code Cleanup          | Remove unused variables/components and standardize API helper usage                   |
-| Documentation         | Move very detailed developer documentation into `/docs` if README becomes too long    |
 
----
 
-<div align="center">
 
-<br />
-
-<img src="https://capsule-render.vercel.app/api?type=waving&color=0:020617,35:450a0a,70:991b1b,100:dc2626&height=120&section=footer" alt="HexaGuard Footer" />
-
-</div>
