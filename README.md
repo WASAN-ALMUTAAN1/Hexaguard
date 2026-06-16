@@ -3,8 +3,8 @@
 <!-- Animated Header -->
 
 <img
-src="https://capsule-render.vercel.app/api?type=waving&color=0:020617,30:450a0a,65:991b1b,100:dc2626&height=260&section=header&text=%F0%9F%9B%A1%EF%B8%8F%20HexaGuard&fontSize=72&fontColor=ffffff&animation=fadeIn&fontAlignY=38&desc=AI%20Red-Teaming%20Platform%20for%20LLM%20Security%20Testing&descSize=20&descAlignY=62"
-alt="HexaGuard Header"
+  src="https://capsule-render.vercel.app/api?type=waving&color=0:020617,30:450a0a,65:991b1b,100:dc2626&height=260&section=header&text=HexaGuard&fontSize=72&fontColor=ffffff&animation=fadeIn&fontAlignY=38&desc=AI%20Red-Teaming%20Platform%20for%20LLM%20Security%20Testing&descSize=20&descAlignY=62"
+  alt="HexaGuard Header"
 />
 ----
 <!-- Demo Preview -->
