@@ -1693,55 +1693,6 @@ The exact backend `.env.example` content should be confirmed before documenting 
 
 ---
 
-# Screenshots
-
-Use this structure:
-
-```text
-docs/
-  screenshots/
-    demo.gif
-    home.png
-    dashboard.png
-    manual-red-team.png
-    campaigns.png
-    reports.png
-    datasets.png
-    scenarios.png
-    sandbox.png
-    blue-team.png
-    compare.png
-    models.png
-```
-
-> These are placeholder paths. Add actual screenshots before final GitHub submission.
-
----
-
-# Documentation Website
-
-A magazine-style GitHub Pages documentation homepage can be placed in:
-
-```text
-docs/index.html
-```
-
-Recommended GitHub Pages setting:
-
-```text
-Settings → Pages → Deploy from branch → main → /docs
-```
-
-Use GitHub Pages if you want:
-
-* A real visual landing page.
-* Screenshot cards.
-* Automatic slideshow.
-* HTML/CSS/JavaScript presentation.
-* A more professional project showcase.
-
----
-
 # Current Project Status
 
 | Area               | Current Status                                                                                           |
@@ -1761,38 +1712,6 @@ Use GitHub Pages if you want:
 | Authentication     | Full persistent auth/user model is not clearly shown in current active model files                       |
 | Build Warnings     | Some unused variables/components are present and should be cleaned later                                 |
 
----
-
-# Future Improvements
-
-## Code Quality
-
-* Remove unused frontend variables and imports reported by the build.
-* Review overlapping backend campaign route declarations.
-* Review duplicated sandbox router inclusion.
-* Confirm health route registration.
-* Standardize frontend API base URL usage.
-
-## Product Improvements
-
-* Add full manual run selection in Reports.
-* Add saved report archive.
-* Add branded backend-generated PDF export.
-* Add OWASP heatmap in Reports.
-* Add multi-campaign risk trends.
-* Add role-based UI and backend authorization if required.
-* Add screenshots and demo GIF.
-
-## Documentation Improvements
-
-* Add architecture diagram.
-* Add database ERD image.
-* Add API examples.
-* Add evaluator/risk scoring technical explanation.
-* Add deployment guide.
-* Add GitHub Pages visual documentation site.
-
----
 
 
 ## Strengths
@@ -1817,14 +1736,3 @@ Use GitHub Pages if you want:
 | AI/security quality | Provider abstraction, sandbox testing, evaluator/judge logic, risk scoring, OWASP mapping, and recommendations       |
 | Maintainability     | File organization, API helpers, TypeScript types, backend services, and modular security modules                     |
 | Future readiness    | Ability to add providers, improve reports, add authentication, strengthen exports, and extend database relationships |
-
-## Honest Limitations
-
-| Limitation             | Explanation                                                                                                         |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| Authentication         | Full persistent authentication and user-role database design is not clearly shown in the current active model files |
-| Reports persistence    | Some reporting/telemetry behavior may not be fully database-backed                                                  |
-| API consistency        | Some frontend helpers use different API base URL variables and should be standardized                               |
-| Legacy/duplicate areas | Some backend routes, schema files, or helper files may need cleanup or verification                                 |
-| Frontend warnings      | Some unused frontend variables/imports are present and should be cleaned                                            |
-| Production hardening   | More work is needed for production-grade authentication, authorization, deployment, logging, and monitoring         |
