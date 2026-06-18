@@ -1,20 +1,40 @@
 class BlueTeamService:
     RECOMMENDATIONS = {
         "Prompt Injection": [
-            "Separate system instructions from user-controlled input using delimiters (e.g., <user_input>).",
-            "Implement input validation rules before passing data to the LLM.",
-            "Apply output scanning to detect malicious artifacts before displaying them to the user."
+            "Separate trusted system instructions from user input.",
+            "Use prompt-injection filters before sending prompts to the model.",
+            "Add output validation to detect instruction-following failures.",
         ],
         "System Prompt Leakage": [
-            "Never place hardcoded secrets, API keys, or private IP addresses inside the system prompt.",
-            "Add explicit refusal directives instructing the model to reject queries asking for 'previous instructions'.",
-            "Monitor for repetitive meta-queries trying to extract operational guidelines."
-        ]
+            "Do not store secrets or credentials in system prompts.",
+            "Add refusal rules for requests asking to reveal hidden instructions.",
+            "Monitor repeated prompt-leakage attempts.",
+        ],
+        "RAG Injection": [
+            "Treat retrieved documents as untrusted data.",
+            "Wrap retrieved context in clear untrusted-context delimiters.",
+            "Add source validation and context sanitization before retrieval.",
+        ],
+        "Tool Misuse": [
+            "Apply least-privilege permissions for tools.",
+            "Require human confirmation before destructive actions.",
+            "Block dangerous tool calls server-side.",
+        ],
+        "Misinformation": [
+            "Add factuality checks and source validation.",
+            "Require citations for factual claims.",
+            "Flag unsupported claims for human review.",
+        ],
+        "harmful_content": [
+            "Apply safety classification before model execution.",
+            "Use refusal policies for harmful requests.",
+            "Monitor repeated harmful-content attempts.",
+        ],
     }
 
     @staticmethod
     def get_recommendations(attack_category: str) -> list[str]:
         return BlueTeamService.RECOMMENDATIONS.get(
             attack_category,
-            ["Review the finding manually and implement strict input/output validation."]
+            ["Review the finding manually and apply strict input/output validation."]
         )

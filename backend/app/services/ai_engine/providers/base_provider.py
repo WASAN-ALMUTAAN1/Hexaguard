@@ -1,11 +1,18 @@
 from abc import ABC, abstractmethod
-from app.services.ai_engine.unified_schema import UnifiedModelResponse
+from typing import Optional, List
+
+from app.services.ai_engine.schemas import ModelResponse, Message
+
 
 class BaseProvider(ABC):
     @abstractmethod
-    async def generate(self, prompt: str) -> dict:
-        """
-        Every provider MUST implement this method.
-        Returns a dictionary dumped from UnifiedModelResponse.
-        """
+    async def generate(
+        self,
+        prompt: str,
+        model: str,
+        context: Optional[str] = None,
+        history: Optional[List[Message]] = None,
+        api_key: Optional[str] = None,
+        endpoint: Optional[str] = None,
+    ) -> ModelResponse:
         pass

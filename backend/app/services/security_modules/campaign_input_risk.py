@@ -225,17 +225,13 @@ def enhance_campaign_sandbox_report(
 
     existing = sandbox_report.get("input_evaluation") or {}
 
-    merged = {
+    sandbox_report["input_evaluation"] = {
         **existing,
         **enhanced,
         "original_engine_risk_level": existing.get("risk_level"),
         "original_engine_reason": existing.get("reason"),
     }
 
-    sandbox_report["input_evaluation"] = merged
-
-    # Keep output/residual risk separate.
-    # Do not mark the test as failed only because the input was risky.
     sandbox_report["input_risk_metadata"] = {
         "risk_level": enhanced["risk_level"],
         "risk_score": enhanced["risk_score"],

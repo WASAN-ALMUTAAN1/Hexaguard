@@ -32,7 +32,7 @@ class ModelProviderListResponse(BaseModel):
 
 
 class ModelProviderTestRequest(BaseModel):
-    provider: str = Field(..., description="mock, openai, groq, huggingface, or ollama")
+    provider: str = Field(..., description="mock, openai, groq, gemini, anthropic, huggingface, ollama, lmstudio, or custom")
     api_key: Optional[str] = None
     base_url: Optional[str] = None
     model_name: Optional[str] = None

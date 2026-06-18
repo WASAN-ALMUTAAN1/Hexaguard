@@ -9,18 +9,6 @@ def build_input_evaluation(
     attack_category: str | None = None,
     row_metadata: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """
-    Canonical HEXAGUARD input evaluation.
-
-    This is the single source of truth for:
-    - Sandbox input_evaluation
-    - Campaign input_evaluation
-    - Dataset-based prompt threat classification
-
-    It evaluates the input threat only.
-    It does not decide whether the model failed or passed.
-    """
-
     category_hint = attack_category or scenario
 
     result = detect_input_risk(

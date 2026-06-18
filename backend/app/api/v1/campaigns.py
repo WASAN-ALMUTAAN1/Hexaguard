@@ -120,9 +120,17 @@ async def create_campaign(
 ):
     return await CampaignService.create_campaign(db, payload)
 
-
-@router.get("", response_model=CampaignListResponse)
 @router.get("/", response_model=CampaignListResponse)
+async def list_campaigns(
+    limit: int = Query(default=25, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+    db: AsyncSession = Depends(get_db),
+):
+    return await CampaignService.list_campaigns(
+        db=db,
+        limit=limit,
+        offset=offset,
+    )
 
 @router.get("/{campaign_id}", response_model=CampaignResponse)
 async def get_campaign(

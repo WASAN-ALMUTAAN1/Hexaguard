@@ -23,21 +23,22 @@ def _safe_key_present(value: str | None) -> bool:
 def list_model_providers() -> ModelProviderListResponse:
     openai_configured = _has_env("OPENAI_API_KEY")
     groq_configured = _has_env("GROQ_API_KEY")
+    gemini_configured = _has_env("GEMINI_API_KEY")
     hf_configured = _has_env("HUGGINGFACE_TOKEN") or _has_env("HF_API_KEY")
     ollama_base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434").strip()
     ollama_configured = bool(ollama_base_url)
 
     providers = [
         ModelProviderStatus(
-            provider="mock",
-            label="Mock Provider",
-            configured=True,
-            source="built-in",
-            status="ready",
-            description="Built-in safe simulated model for workflow testing.",
-            usage_mode="platform_demo",
-            credential_mode="built_in",
-            security_note="No external API key is required. Safe for demos and workflow testing.",
+            provider="gemini",
+            label="Gemini",
+            configured=gemini_configured,
+            source="environment",
+            status="configured" if gemini_configured else "not_configured",
+            description="Uses GEMINI_API_KEY from backend environment.",
+            usage_mode="client_byok",
+            credential_mode="backend_env_or_encrypted_byok",
+            security_note="Do not expose Gemini API keys to the frontend.",
         ),
         ModelProviderStatus(
             provider="openai",
@@ -87,16 +88,16 @@ def list_model_providers() -> ModelProviderListResponse:
 
     campaign_models = [
         ModelOption(
-            value="mock:mock-safe-model",
-            label="Mock Safe Model",
-            provider="Mock",
-            description="Built-in simulated safe model for testing the campaign workflow.",
-            configured=True,
-            available_for_campaigns=True,
-            usage_mode="platform_demo",
-            credential_mode="built_in",
-            security_note="Safe built-in demo model. No API key required.",
-        ),
+            value="gemini:gemini-2.5-flash",
+            label="Gemini 2.5 Flash",
+            provider="Gemini",
+            description="Available when GEMINI_API_KEY is configured.",
+            configured=gemini_configured,
+            available_for_campaigns=gemini_configured,
+            usage_mode="client_byok",
+            credential_mode="backend_env_or_encrypted_byok",
+            security_note="Use backend env or encrypted BYOK.",
+),
         ModelOption(
             value="openai:gpt-4o-mini",
             label="OpenAI GPT-4o mini",
@@ -185,7 +186,24 @@ def test_model_provider(payload: ModelProviderTestRequest) -> ModelProviderTestR
             message="Groq key is present. Full live model call can be enabled in the provider runner.",
             available_for_campaigns=_has_env("GROQ_API_KEY"),
         )
+    if provider == "gemini":
+        key = payload.api_key or os.getenv("GEMINI_API_KEY")
 
+        if not _safe_key_present(key):
+            return ModelProviderTestResponse(
+                provider="gemini",
+                success=False,
+                status="missing_key",
+                message="Gemini API key is missing. Configure GEMINI_API_KEY on the backend.",
+        )
+
+        return ModelProviderTestResponse(
+            provider="gemini",
+            success=True,
+            status="key_present",
+            message="Gemini key is present. Full live model calls are available through the Gemini connector.",
+            available_for_campaigns=_has_env("GEMINI_API_KEY"),
+    )
     if provider == "huggingface":
         key = payload.api_key or os.getenv("HUGGINGFACE_TOKEN") or os.getenv("HF_API_KEY")
         if not _safe_key_present(key):
@@ -867,10 +885,11 @@ async def create_registry_model_db(db, payload) -> dict:
     is_default = bool(_payload_value(payload, "isDefault", "is_default", default=False))
     capability_type = str(_payload_value(payload, "capabilityType", "capability_type", default="chat")).strip() or "chat"
 
+    api_key_configured = bool(api_key) or _provider_env_configured(provider)
+
     draft = {
         "provider": provider,
-        "apiKey": api_key,
-        "maskedKey": "Configured" if api_key else "",
+        "apiKeyConfigured": api_key_configured,
         "baseUrl": base_url,
         "enabled": enabled,
         "usageScope": usage_scope,
@@ -894,7 +913,7 @@ async def create_registry_model_db(db, payload) -> dict:
         usage_scope=usage_scope,
         is_default=is_default,
         capability_type=capability_type,
-        api_key_configured=bool(api_key) or _provider_env_configured(provider) or provider in {"mock", "ollama", "lmstudio"},
+        api_key_configured=api_key_configured,
         masked_key=_mask_key(api_key) if api_key else ("Configured" if _provider_env_configured(provider) and provider not in {"mock", "ollama", "lmstudio"} else None),
     )
 

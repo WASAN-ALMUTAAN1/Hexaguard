@@ -346,11 +346,23 @@ def build_blue_team_agent_graph():
     return graph.compile()
 
 
+_BLUE_TEAM_GRAPH = None
+
+
+def get_blue_team_agent_graph():
+    global _BLUE_TEAM_GRAPH
+
+    if _BLUE_TEAM_GRAPH is None:
+        _BLUE_TEAM_GRAPH = build_blue_team_agent_graph()
+
+    return _BLUE_TEAM_GRAPH
+
+
 def run_blue_team_agent(
     recommendation: dict[str, Any],
     include_executive_summary: bool = True,
 ) -> dict[str, Any]:
-    graph = build_blue_team_agent_graph()
+    graph = get_blue_team_agent_graph()
 
     final_state = graph.invoke(
         {

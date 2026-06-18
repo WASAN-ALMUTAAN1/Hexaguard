@@ -32,10 +32,10 @@ class OutputEvaluation(BaseModel):
     unsafe_output_detected: bool
     tool_misuse_detected: bool
     rag_injection_success: bool
+    hallucination_detected: bool = False
     reasoning: str
     evidence: List[str] = Field(default_factory=list)
     confidence: str
-
 
 class RiskAssessment(BaseModel):
     risk_score: int
