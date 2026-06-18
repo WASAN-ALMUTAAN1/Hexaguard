@@ -19,14 +19,14 @@ const FALLBACK_COMPARE_MODELS: CompareModelOption[] = [
     value: "mock:mock-safe-model",
     badge: "Demo",
     provider: "mock",
-    status: "demo_only",
+    status: "available",
   },
   {
     label: "Ollama Llama 3.2 3B",
     value: "ollama:llama3.2:3b",
     badge: "Local",
     provider: "ollama",
-    status: "untested",
+    status: "available",
   },
 ];
 

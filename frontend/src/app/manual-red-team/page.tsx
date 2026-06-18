@@ -206,7 +206,7 @@ export default function ManualRedTeamPage() {
     setIsRunning(true);
     setError("");
     setSuccessMessage("");
-
+    console.log("MODEL SENT TO BACKEND =", modelName);
     try {
       const report = await runSandboxTest({
         prompt: promptToRun,

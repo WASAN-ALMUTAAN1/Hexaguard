@@ -18,6 +18,7 @@ type ProviderName =
   | "mock"
   | "openai"
   | "groq"
+  | "gemini"
   | "ollama"
   | "lmstudio"
   | "custom"
@@ -90,6 +91,7 @@ const PROVIDERS = [
   { value: "mock", label: "Mock", helper: "Demo provider." },
   { value: "openai", label: "OpenAI", helper: "Hosted provider." },
   { value: "groq", label: "Groq", helper: "Hosted provider." },
+  { value: "gemini", label: "Gemini", helper: "Hosted provider." },
   { value: "ollama", label: "Ollama", helper: "Local provider." },
   { value: "lmstudio", label: "LM Studio", helper: "Local provider." },
   { value: "custom", label: "Custom", helper: "OpenAI-compatible." },
@@ -116,8 +118,11 @@ function normalizeProvider(provider: string): ProviderName {
 
   if (value.includes("openai")) return "openai";
   if (value.includes("groq")) return "groq";
+  if (value.includes("gemini") || value.includes("google")) return "gemini";
   if (value.includes("ollama")) return "ollama";
   if (value.includes("lmstudio") || value.includes("lm studio") || value.includes("lm_studio") || value.includes("lm-studio")) return "lmstudio";
+  if (value.includes("anthropic") || value.includes("claude")) return "anthropic";
+  if (value.includes("huggingface") || value.includes("hugging face") || value.includes("hf")) return "huggingface";
   if (value.includes("mock")) return "mock";
   if (value.includes("custom")) return "custom";
 
@@ -619,7 +624,8 @@ function ModelFormModal({
 }) {
   const provider = normalizeProvider(form.provider);
   const isMock = provider === "mock";
-  const requiresApiKey = provider === "openai" || provider === "groq";
+  const requiresApiKey =
+  provider === "openai" || provider === "groq" || provider === "gemini";
   const requiresBaseUrl =
     provider === "ollama" || provider === "lmstudio" || provider === "custom";
   const showBaseUrl = !isMock;
@@ -1380,8 +1386,10 @@ export default function ModelSettingsPage() {
       errors.modelId = "Model ID is required.";
     }
 
-    if ((provider === "openai" || provider === "groq") && !form.apiKey.trim() && !form.maskedKey) {
-      errors.apiKey = `API key is required for ${providerLabel(provider)}.`;
+    if ( (provider === "openai" || provider === "groq" || provider === "gemini") &&
+      !form.apiKey.trim() &&
+      !form.maskedKey) { 
+        errors.apiKey = `API key is required for ${providerLabel(provider)}.`;
     }
 
     if ((provider === "ollama" || provider === "lmstudio" || provider === "custom") && !form.baseUrl.trim()) {
@@ -1580,7 +1588,7 @@ export default function ModelSettingsPage() {
 
       if (provider === "mock") return true;
 
-      if (provider === "openai" || provider === "groq") {
+      if (provider === "openai" || provider === "groq" || provider === "gemini") {
         return model.apiKeyConfigured;
       }
 
