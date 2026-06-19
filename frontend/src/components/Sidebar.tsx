@@ -123,6 +123,20 @@ export default function Sidebar({
             );
           })}
 
+{user?.role === "admin" ? (
+  <Link
+    href="/audit-logs"
+    onClick={onCloseMobile}
+    className={
+      pathname === "/audit-logs"
+        ? "shrink-0 rounded-full bg-[#ff3434] px-3 py-1.5 text-xs font-bold text-white shadow-[0_0_16px_rgba(255,52,52,0.20)]"
+        : "shrink-0 rounded-full px-2.5 py-1.5 text-xs font-semibold text-[#a9a9a9] transition hover:bg-white/[0.05] hover:text-white"
+    }
+  >
+    Audit Logs
+  </Link>
+) : null}
+
           {user ? (
             <div className="relative">
               <button
