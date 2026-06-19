@@ -17,6 +17,7 @@ from app.models.models import DatasetRow, UploadedDataset
 from app.schemas.dataset import DatasetColumnMapping, DatasetImportRequest
 from app.services.dataset_auto_mapper_svc import get_best_dataset_mapping
 from app.services.security_modules.input_risk_detector import normalize_dataset_risk_fields
+from app.services.auth_svc import write_audit_log
 
 
 PROMPT_CANDIDATES = [
@@ -481,7 +482,7 @@ class DatasetService:
         )
 
         db.add(dataset)
-        await db.commit()
+        await db.flush()
         await db.refresh(dataset)
 
         for row in normalized_rows:
@@ -493,8 +494,22 @@ class DatasetService:
                 )
             )
 
-        await db.commit()
+        await write_audit_log(
+            db=db,
+            action="dataset.created",
+            user_id=None,
+            entity_type="dataset",
+            entity_id=dataset.dataset_id,
+            metadata_json={
+                "name": dataset.name,
+                "filename": dataset.filename,
+                "source_type": dataset.source_type,
+                "row_count": dataset.row_count,
+            },
+        )
 
+        await db.commit()
+        
         preview_result = await db.execute(
             select(DatasetRow)
             .where(DatasetRow.dataset_pk == dataset.id)

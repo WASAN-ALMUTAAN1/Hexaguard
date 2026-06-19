@@ -88,3 +88,25 @@ async def update_user(
         return UserPublic.model_validate(user)
     except PermissionDeniedError as exc:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(exc)) from exc
+
+@router.delete("/{user_id}", response_model=UserPublic)
+async def disable_user(
+    user_id: str,
+    db: AsyncSession = Depends(get_db),
+    admin_user: User = Depends(get_current_admin_user),
+):
+    target_user = await auth_svc.get_user_by_id(db=db, user_id=user_id)
+
+    if not target_user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User was not found.")
+
+    try:
+        user = await auth_svc.admin_disable_user(
+            db=db,
+            target_user=target_user,
+            admin_user=admin_user,
+        )
+
+        return UserPublic.model_validate(user)
+    except PermissionDeniedError as exc:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(exc)) from exc

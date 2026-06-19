@@ -12,6 +12,7 @@ from app.api.v1 import (
     sandbox,
     users,
     scenarios,
+    audit_logs,
 )
 
 api_router = APIRouter()
@@ -28,3 +29,8 @@ api_router.include_router(datasets.router, prefix="/datasets", tags=["Datasets"]
 api_router.include_router(campaigns.router, prefix="/campaigns", tags=["Campaigns"])
 api_router.include_router(reports.router, prefix="/reports", tags=["Reports"])
 api_router.include_router(model_providers.router)
+api_router.include_router(
+    audit_logs.router,
+    prefix="/audit-logs",
+    tags=["Audit Logs"],
+)

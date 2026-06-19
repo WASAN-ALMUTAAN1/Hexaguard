@@ -506,3 +506,32 @@ async def admin_update_user(
 def require_admin(user: User) -> None:
     if user.role != "admin":
         raise PermissionDeniedError("Admin access is required.")
+
+
+async def admin_disable_user(
+    db: AsyncSession,
+    target_user: User,
+    admin_user: User,
+) -> User:
+    if admin_user.role != "admin":
+        raise PermissionDeniedError("Only admins can disable users.")
+
+    if target_user.id == admin_user.id:
+        raise PermissionDeniedError("Admins cannot disable their own account.")
+
+    target_user.status = "inactive"
+    target_user.updated_at = _utcnow()
+
+    await write_audit_log(
+        db=db,
+        action="user.disabled",
+        user_id=admin_user.id,
+        entity_type="user",
+        entity_id=target_user.id,
+        metadata_json={"target_email": target_user.email},
+    )
+
+    await db.commit()
+    await db.refresh(target_user)
+
+    return target_user
