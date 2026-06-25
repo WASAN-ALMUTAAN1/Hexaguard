@@ -2,16 +2,16 @@
 
 <!-- Animated Header -->
 <img
-src="assets/Banner.png"
-alt="HexaGuard AI Red Teaming banner Preview"
-width="1000"
-/>
-------------------------------------------------
-<!-- Demo Preview -->
-<img
-src="assets/hexaguard_demo_logical_clear_1080p.gif"
-alt="HexaGuard AI Red Teaming Demo Preview"
-width="1000"
+  src="assets/Banner.png"
+  alt="HexaGuard AI Red Teaming Banner"
+  width="100%"
+  height="100%"
+  style="display:block;"
+/><img
+  src="assets/hexaguard_demo_logical_clear_1080p.gif"
+  alt="HexaGuard AI Red Teaming Demo Preview"
+  width="100%"
+  style="display:block;"
 />
 
 <br />
