@@ -81,7 +81,12 @@ Modern AI systems can fail in ways that traditional web applications do not. Lar
 ---
 
 ## Platform Workflow
-
+<img
+  src="assets/hexaguard_demo_logical_clear_1080p.gif"
+  alt="HexaGuard AI Red Teaming Demo Preview"
+  width="100%"
+  style="display:block;"
+/>
 <div align="center">
 
 <table>
@@ -126,6 +131,7 @@ Modern AI systems can fail in ways that traditional web applications do not. Lar
 </div>
 
 ### Workflow Diagram
+
 
 ```mermaid
 flowchart LR
@@ -867,12 +873,5 @@ backend/app/core/config.py
 | Compare Page          | Decide whether comparison remains standalone or fully moves into Reports              |
 | Dataset UI            | Confirm persistent dataset management is fully connected to backend storage           |
 | Code Cleanup          | Remove unused variables/components and standardize API helper usage                   |
-
-<img
-  src="assets/hexaguard_demo_logical_clear_1080p.gif"
-  alt="HexaGuard AI Red Teaming Demo Preview"
-  width="100%"
-  style="display:block;"
-/>
 
 
