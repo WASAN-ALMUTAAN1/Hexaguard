@@ -4,15 +4,14 @@
 <img
 src="assets/Banner.png"
 alt="HexaGuard AI Red Teaming banner Preview"
-width="900"
+width="1000"
 />
-
-----
+------------------------------------------------
 <!-- Demo Preview -->
 <img
 src="assets/hexaguard_demo_logical_clear_1080p.gif"
 alt="HexaGuard AI Red Teaming Demo Preview"
-width="900"
+width="1000"
 />
 
 <br />
