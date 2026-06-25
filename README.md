@@ -2,30 +2,21 @@
 
 <!-- Animated Header -->
 <img
-  src="assets/Banner.png"
+  src="assets/ban.png"
   alt="HexaGuard AI Red Teaming Banner"
   width="100%"
   height="100%"
   style="display:block;"
-/><img
-  src="assets/hexaguard_demo_logical_clear_1080p.gif"
-  alt="HexaGuard AI Red Teaming Demo Preview"
-  width="100%"
-  style="display:block;"
 />
-
 <br />
-<h3>
+<p align="center">
   A full-stack AI security platform for testing, evaluating, comparing, and reporting large language model behavior.
-</h3>
+</p>
 <p align="center">
   <b>HexaGuard</b> provides an end-to-end workflow for scenario-based LLM security testing, including model provider setup, attack scenario management, manual red-team testing, automated campaigns, AI-assisted response evaluation, risk scoring, model comparison, Blue Team recommendations, and structured security reporting.
 </p>
-
 <br />
-
 <!-- Security Identity Badges -->
-
 <img src="https://img.shields.io/badge/AI%20Security-Red%20Teaming-991b1b?style=for-the-badge" />
 <img src="https://img.shields.io/badge/LLM%20Evaluation-AI%20Assisted%20Judge-7f1d1d?style=for-the-badge" />
 <img src="https://img.shields.io/badge/Risk%20Analysis-Model%20Safety-dc2626?style=for-the-badge" />
@@ -33,6 +24,7 @@
 
 
 <br />
+
 
 </div>
 
@@ -876,5 +868,11 @@ backend/app/core/config.py
 | Dataset UI            | Confirm persistent dataset management is fully connected to backend storage           |
 | Code Cleanup          | Remove unused variables/components and standardize API helper usage                   |
 
+<img
+  src="assets/hexaguard_demo_logical_clear_1080p.gif"
+  alt="HexaGuard AI Red Teaming Demo Preview"
+  width="100%"
+  style="display:block;"
+/>
 
 
