@@ -2,7 +2,7 @@
 
 <!-- Animated Header -->
 <img
-src="assets/hexaguard_demo_logical_clear_1080p.gif"
+src="assets/Banner.png"
 alt="HexaGuard AI Red Teaming banner Preview"
 width="900"
 />
